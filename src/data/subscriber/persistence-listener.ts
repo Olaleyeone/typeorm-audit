@@ -21,7 +21,7 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
      */
     beforeTransactionStart(event: TransactionStartEvent) {
         // console.log(`BEFORE TRANSACTION STARTED: `);
-        const taskActivity: ActivityLog = event.connection['taskActivity'];
+        const taskActivity: ActivityLog = (event.connection as any)['taskActivity'];
         if (!taskActivity) {
             return;
         }

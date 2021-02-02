@@ -13,7 +13,8 @@
   },
   "keywords": [
     "activity-log",
-    "audit-trail"
+    "audit-trail",
+    "typeorm"
   ],
   "author": "Olaleye Afolabi",
   "license": "ISC",

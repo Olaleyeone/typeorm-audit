@@ -9,6 +9,10 @@
       "moduleResolution": "node",
       "baseUrl": "src",
       "emitDecoratorMetadata": true,
-      "experimentalDecorators": true
+      "experimentalDecorators": true,
+      "noImplicitAny": true,
+      "noImplicitThis": true,
+      "strictFunctionTypes": true,
+      "alwaysStrict": true
    }
 }
