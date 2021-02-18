@@ -1,6 +1,6 @@
 import { ActivityLog, Status } from '../data/entity/ActivityLog';
 import { Activity } from '../decorator/activity';
-import { DIContainer, LazyDIContainer, ConstructorFunction } from 'di-node';
+import { DIContainer, LazyDIContainer, ConstructorFunction } from '@olaleyeone/di-node';
 import { Connection, EntityManager } from 'typeorm';
 import { ChronoUnit, Instant, OffsetDateTime } from '@js-joda/core';
 import { Transactional } from '../decorator/transactional';

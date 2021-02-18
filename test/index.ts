@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { Connection, createConnection, EntityManager } from "typeorm";
-import { LazyDIContainer } from 'di-node';
+import { LazyDIContainer } from '@olaleyeone/di-node';
 import { UserService } from "./service/user.service";
 import { AddressService } from "./service/address.service";
 import { createActivityLogProxy } from "../src/proxy/activity-log-proxy-factory";

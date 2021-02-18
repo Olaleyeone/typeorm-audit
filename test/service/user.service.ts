@@ -1,7 +1,7 @@
 import { EntityManager } from "typeorm";
 import { User } from "../entity/User";
 import { AddressService } from "./address.service";
-import { Injectable } from 'di-node';
+import { Injectable } from '@olaleyeone/di-node';
 import { Activity } from '../../src/decorator/activity';
 import { Transactional } from '../../src/decorator/transactional';
 

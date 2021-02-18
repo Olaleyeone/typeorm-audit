@@ -32,6 +32,7 @@
   },
   "dependencies": {
     "@js-joda/core": "^3.2.0",
+    "@olaleyeone/di-node": "^1.0.0",
     "typeorm": "^0.2.30"
   }
 }

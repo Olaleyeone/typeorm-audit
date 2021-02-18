@@ -1,6 +1,6 @@
 import { EntityManager } from "typeorm";
 import { Address } from "../entity/Address";
-import { Injectable } from 'di-node';
+import { Injectable } from '@olaleyeone/di-node';
 import { Activity } from '../../src/decorator/activity';
 
 @Injectable()

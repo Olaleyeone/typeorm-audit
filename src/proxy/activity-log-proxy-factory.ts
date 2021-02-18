@@ -1,5 +1,5 @@
 import { Activity } from '../decorator/activity';
-import { DIContainer, ConstructorFunction, Provider } from 'di-node';
+import { DIContainer, ConstructorFunction, Provider } from '@olaleyeone/di-node';
 import { Transactional } from '../decorator/transactional';
 import { createActivityRunner } from './activity-runner';
 import { createTransactionRunner } from './transactional-runner';

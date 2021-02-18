@@ -1,4 +1,4 @@
-import { DIContainer, LazyDIContainer, ConstructorFunction } from 'di-node';
+import { DIContainer, LazyDIContainer, ConstructorFunction } from '@olaleyeone/di-node';
 import { EntityManager } from 'typeorm';
 
 export const runnerKey = Symbol('transaction:entityManager');
