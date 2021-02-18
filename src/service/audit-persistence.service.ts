@@ -5,8 +5,8 @@ import { TransactionLog } from "../data/entity/TransactionLog";
 export class AuditPersistenceService {
 
     async persistTaskTransaction(taskTransaction: TransactionLog, entityManager: EntityManager) {
-        if (!taskTransaction.taskActivity.id) {
-            await this.persistTaskActivity(taskTransaction.taskActivity, entityManager);
+        if (!taskTransaction.activity.id) {
+            await this.persistTaskActivity(taskTransaction.activity, entityManager);
         }
 
         await entityManager.save(taskTransaction);

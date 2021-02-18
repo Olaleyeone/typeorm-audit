@@ -1,4 +1,4 @@
-import { InsertEvent, RemoveEvent, UpdateEvent } from "typeorm";
+import { EntityManager, InsertEvent, RemoveEvent, UpdateEvent } from "typeorm";
 import { OperationType } from "../data/enum/operation-type.enum";
 import { AuditPersistenceService } from "./audit-persistence.service";
 import { ActivityLog } from "../data/entity/ActivityLog";
@@ -7,6 +7,16 @@ import { EntityState } from "../data/entity/EntityState";
 import { EntityStateAttribute } from "../data/entity/EntityStateAttribute";
 import { TransactionLog } from "../data/entity/TransactionLog";
 import { WebRequest } from "../data/entity/WebRequest";
+
+const transactionKey = Symbol('transaction');
+
+export function getTransactionLog(entityManager: EntityManager): TransactionLog {
+    return (entityManager.queryRunner as any)[transactionKey]
+}
+
+export function setTransactionLog(entityManager: EntityManager, transactionLog: TransactionLog) {
+    (entityManager.queryRunner as any)[transactionKey] = transactionLog;
+}
 
 export class EntityStateService {
 
@@ -18,7 +28,7 @@ export class EntityStateService {
         entityState.entityName = event.metadata.name;
         entityState.entityId = JSON.stringify(id || event.manager.getId(event.entity));
 
-        const taskTransaction: TransactionLog = event.queryRunner.data.taskTransaction;
+        const taskTransaction: TransactionLog = getTransactionLog(event.manager);
         if (!taskTransaction) {
             throw new Error('Data modification must occur with a defined activity');
         }

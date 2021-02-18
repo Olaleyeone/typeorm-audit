@@ -2,6 +2,7 @@ import { Activity } from '../decorator/activity';
 import { DIContainer, ConstructorFunction, Provider } from 'di-node';
 import { Transactional } from '../decorator/transactional';
 import { createActivityRunner } from './activity-runner';
+import { createTransactionRunner } from './transactional-runner';
 
 export function createActivityLogProxy<T>(constructor: ConstructorFunction<T>, provider: Provider<T>, container: DIContainer): T {
 
@@ -28,7 +29,7 @@ export function createActivityLogProxy<T>(constructor: ConstructorFunction<T>, p
 
         const transactional: string = Reflect.getMetadata(Transactional.metadataKey, constructor, propertyName);
         if (transactional) {
-          return propertyValue = createActivityRunner(container, constructor, propertyName);
+          return propertyValue = createTransactionRunner(container, constructor, propertyName);
         }
 
         const _this: any = target || (target = provider());

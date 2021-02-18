@@ -1,15 +1,23 @@
 import { ChronoUnit, Instant, OffsetDateTime } from '@js-joda/core';
-import { EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent } from "typeorm";
+import { EntityManager, EntitySubscriberInterface, EventSubscriber, InsertEvent, RemoveEvent, UpdateEvent } from "typeorm";
 import { TransactionCommitEvent } from "typeorm/subscriber/event/TransactionCommitEvent";
 import { TransactionStartEvent } from "typeorm/subscriber/event/TransactionStartEvent";
 import { OperationType } from "../enum/operation-type.enum";
 import { AuditPersistenceService } from "../../service/audit-persistence.service";
-import { EntityStateService } from '../../service/entity-state.service';
+import { EntityStateService, getTransactionLog, setTransactionLog } from '../../service/entity-state.service';
 import { ActivityLog } from "../entity/ActivityLog";
 import { EntityState } from "../entity/EntityState";
 import { EntityStateAttribute } from "../entity/EntityStateAttribute";
 import { TransactionLog } from "../entity/TransactionLog";
 import { Activity } from '../../decorator/activity';
+
+export function getActivityLog(entityManager: EntityManager): ActivityLog {
+    return (entityManager.queryRunner as any)[Activity.metadataKey]
+}
+
+export function setActivityLog(entityManager: EntityManager, activityLog: ActivityLog) {
+    (entityManager.queryRunner as any)[Activity.metadataKey] = activityLog;
+}
 
 @EventSubscriber()
 export class PersistenceSubscriber implements EntitySubscriberInterface {
@@ -21,15 +29,14 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
      * Called before transaction start.
      */
     beforeTransactionStart(event: TransactionStartEvent) {
-        // console.log(`BEFORE TRANSACTION STARTED: ${event.connection.name}`);
-        const taskActivity: ActivityLog = (event.queryRunner as any)[Activity.metadataKey];
-        // console.log('taskActivity', taskActivity);
+        const taskActivity: ActivityLog = getActivityLog(event.manager);
         if (!taskActivity) {
             return;
         }
+        console.log('BEFORE TRANSACTION STARTED:', event.queryRunner.data, taskActivity?.name);
         const taskTransaction = new TransactionLog();
-        taskTransaction.taskActivity = taskActivity;
-        event.queryRunner.data.taskTransaction = taskTransaction;
+        taskTransaction.activity = taskActivity;
+        setTransactionLog(event.manager, taskTransaction);
     }
 
     /**
@@ -37,14 +44,15 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
      */
     async beforeTransactionCommit(event: TransactionCommitEvent) {
         // console.log(`BEFORE TRANSACTION COMMITTED`);
-        const taskTransaction: TransactionLog = event.queryRunner.data.taskTransaction;
+        const taskTransaction: TransactionLog = getTransactionLog(event.manager);
         if (!taskTransaction) {
             return;
         }
         taskTransaction.duration.nanoSecondsTaken = Instant.ofEpochMilli(taskTransaction.duration.startedAt.getTime()).until(
             OffsetDateTime.now(), ChronoUnit.NANOS);
         await event.manager.save(taskTransaction);
-        // console.log(`BEFORE TRANSACTION COMMITTED: `, event.queryRunner.data.taskTransaction);
+        setTransactionLog(event.manager, null);
+        console.log('BEFORE TRANSACTION COMMITTED:', event.queryRunner.data, taskTransaction.activity?.name);
     }
 
     /**

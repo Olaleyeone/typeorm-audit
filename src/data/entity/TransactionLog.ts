@@ -14,7 +14,7 @@ export class TransactionLog {
 
     @ManyToOne(type => ActivityLog, { nullable: false })
     @JoinColumn()
-    taskActivity: ActivityLog;
+    activity: ActivityLog;
 
     @Column(type => Duration, {prefix: false})
     duration: Duration;

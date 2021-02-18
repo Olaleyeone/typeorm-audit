@@ -3,31 +3,46 @@ import { Activity } from '../decorator/activity';
 import { DIContainer, LazyDIContainer, ConstructorFunction } from 'di-node';
 import { Connection, EntityManager } from 'typeorm';
 import { ChronoUnit, Instant, OffsetDateTime } from '@js-joda/core';
+import { Transactional } from '../decorator/transactional';
+import { createTransactionRunner } from './transactional-runner';
+import { getTransactionLog } from '../service/entity-state.service';
+import { getActivityLog, setActivityLog } from '../data/subscriber/persistence-listener';
 
-export const runnerKey = Symbol('activity:name');
+const activityNameKey = Symbol('activity:name');
 
 export function createActivityRunner(parentContainer: DIContainer, constructor: ConstructorFunction<any>, methodName: string) {
 
     const activityName: string = Reflect.getMetadata(Activity.metadataKey, constructor, methodName);
 
     const parentEntityManager: EntityManager = parentContainer.get(EntityManager);
-    console.log(activityName, parentEntityManager.queryRunner?.data);
+    // console.log(activityName, parentEntityManager.queryRunner?.data);
     let container: DIContainer;
-    if (parentEntityManager.queryRunner?.data && (parentEntityManager.queryRunner?.data as any)[runnerKey]) {
+    if (parentEntityManager.queryRunner?.data && (parentEntityManager.queryRunner?.data as any)[activityNameKey]) {
         container = parentContainer;
     } else {
-        console.log(methodName);
         container = createActivityContainer(parentContainer, activityName);
     }
 
+    return runInContainer(activityName, container, constructor, methodName);
+}
+
+function runInContainer(activityName: string, container: DIContainer, constructor: ConstructorFunction<any>, methodName: string) {
     return () => {
         const activity = createActivity(activityName, container);
         const entityManager = container.getInstance(EntityManager);
+        console.log(activityName, entityManager.queryRunner?.data);
 
         let result;
         try {
-            const realTarget: any = container.createInstance(constructor);
-            result = realTarget[methodName].call(realTarget, arguments);
+            const transactional: string = Reflect.getMetadata(Transactional.metadataKey, constructor, methodName);
+            if (transactional) {
+                result = createTransactionRunner(container, constructor, methodName).call(null, arguments);
+            } else {
+                const realTarget: any = container.createInstance(constructor);
+                activity.transaction = getTransactionLog(entityManager);
+                result = realTarget[methodName].call(realTarget, arguments);
+            }
+
             if (result.constructor === Promise) {
                 result
                     .catch(e => {
@@ -51,7 +66,7 @@ export function createActivityRunner(parentContainer: DIContainer, constructor: 
     };
 }
 
-function createActivityContainer(parentContainer: DIContainer, activityname: string) {
+function createActivityContainer(parentContainer: DIContainer, activityName: string) {
     const connection: Connection = parentContainer.get(Connection);
     return (parentContainer as LazyDIContainer).clone([
         {
@@ -61,7 +76,7 @@ function createActivityContainer(parentContainer: DIContainer, activityname: str
                 if (!queryRunner.data) {
                     queryRunner.data = {};
                 }
-                (queryRunner.data as any)[runnerKey] = activityname;
+                (queryRunner.data as any)[activityNameKey] = activityName;
                 return connection.createEntityManager(queryRunner);
             },
             proxy: false
@@ -72,8 +87,8 @@ function createActivityContainer(parentContainer: DIContainer, activityname: str
 function createActivity(activityName: string, container: DIContainer) {
     const entityManager: EntityManager = container.get(EntityManager);
     const activity = new ActivityLog(activityName);
-    const previousActivity = (entityManager.queryRunner as any)[Activity.metadataKey];
-    (entityManager.queryRunner as any)[Activity.metadataKey] = activity;
+    const previousActivity = getActivityLog(entityManager);
+    setActivityLog(entityManager, activity);
 
     if (previousActivity) {
         activity.parent = previousActivity;
@@ -85,6 +100,7 @@ function createActivity(activityName: string, container: DIContainer) {
 async function completeActivity(activity: ActivityLog, entityManager: EntityManager) {
     activity.duration.nanoSecondsTaken = Instant.ofEpochMilli(activity.duration.startedAt.getTime()).until(
         OffsetDateTime.now(), ChronoUnit.NANOS);
+    console.log(`completed "${activity.name}" in ${activity.duration.nanoSecondsTaken / 1000000}ms`);
     if (activity.status === Status.STARTED) {
         activity.status = Status.SUCCESSFUL;
     }
@@ -92,12 +108,12 @@ async function completeActivity(activity: ActivityLog, entityManager: EntityMana
     if (activity.parent) {
         return;
     }
-    (entityManager.queryRunner as any)[Activity.metadataKey] = activity.parent;
-    await persistTaskActivity(activity, entityManager);
-    entityManager.queryRunner.release();
+    setActivityLog(entityManager, null);
+    persistTaskActivity(activity, entityManager);
 }
 
 async function persistTaskActivity(taskActivity: ActivityLog, entityManager: EntityManager) {
+    console.log('saving activity log: ', taskActivity.name);
     if (taskActivity.id) {
         const existing = await entityManager.findOne(ActivityLog, taskActivity.id);
         if (existing) {
@@ -113,4 +129,5 @@ async function persistTaskActivity(taskActivity: ActivityLog, entityManager: Ent
     if (taskActivity.children) {
         await Promise.all(taskActivity.children.map(e => persistTaskActivity(e, entityManager)));
     }
+    entityManager.queryRunner.release();
 }
