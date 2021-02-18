@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 import { Duration } from "../embedded/Duration";
 import { CodeContext } from "./CodeContext";
 import { TransactionLog } from "./TransactionLog";
@@ -20,7 +20,9 @@ export class ActivityLog {
 
     @ManyToOne(type => ActivityLog)
     @JoinColumn()
-    parentActivity: ActivityLog;
+    parent: ActivityLog;
+
+    children: ActivityLog[] = [];
 
     @ManyToOne(type => TransactionLog)
     @JoinColumn()
@@ -33,30 +35,35 @@ export class ActivityLog {
     description: string;
 
     @Column({ nullable: false })
-    depth: number = 1;
+    depth: number;
 
     @ManyToOne(type => CodeContext)
     @JoinColumn()
     entryPoint: CodeContext;
 
-    @Column(type => Duration, {prefix: false})
+    @Column(type => Duration, { prefix: false })
     duration: Duration;
 
     // @ManyToOne
     // private Failure failure;
 
     @Column({ nullable: false })
-    status: Status = Status.IN_PROGRESS;
+    status: Status = Status.STARTED;
 
     constructor(name: string, description?: string) {
         this.duration = new Duration();
         this.name = name;
         this.description = description;
     }
+
+    @BeforeInsert()
+    computeDepth() {
+        this.depth = (this.parent?.depth || 0) + 1;
+    }
 }
 
 export enum Status {
     SUCCESSFUL = 'SUCCESSFUL',
     FAILED = 'FAILED',
-    IN_PROGRESS = 'IN_PROGRESS'
+    STARTED = 'STARTED'
 }

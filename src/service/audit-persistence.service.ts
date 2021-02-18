@@ -13,6 +13,9 @@ export class AuditPersistenceService {
     }
 
     async persistTaskActivity(taskActivity: ActivityLog, entityManager: EntityManager) {
+        if (taskActivity.parent) {
+            await this.persistTaskActivity(taskActivity.parent, entityManager);
+        }
         if (taskActivity.id) {
             const existing = await entityManager.findOne(ActivityLog, taskActivity.id);
             if (existing) {

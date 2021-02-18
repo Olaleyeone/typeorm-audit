@@ -9,6 +9,7 @@ import { ActivityLog } from "../entity/ActivityLog";
 import { EntityState } from "../entity/EntityState";
 import { EntityStateAttribute } from "../entity/EntityStateAttribute";
 import { TransactionLog } from "../entity/TransactionLog";
+import { Activity } from '../../decorator/activity';
 
 @EventSubscriber()
 export class PersistenceSubscriber implements EntitySubscriberInterface {
@@ -20,8 +21,8 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
      * Called before transaction start.
      */
     beforeTransactionStart(event: TransactionStartEvent) {
-        // console.log(`BEFORE TRANSACTION STARTED: `);
-        const taskActivity: ActivityLog = (event.connection as any)['taskActivity'];
+        // console.log(`BEFORE TRANSACTION STARTED: ${event.connection.name}`);
+        const taskActivity: ActivityLog = (event.connection as any)[Activity.metadataKey];
         if (!taskActivity) {
             return;
         }
@@ -34,7 +35,7 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
      * Called before transaction commit.
      */
     async beforeTransactionCommit(event: TransactionCommitEvent) {
-        // console.log(`BEFORE TRANSACTION COMMITTED: `, event);
+        // console.log(`BEFORE TRANSACTION COMMITTED`);
         const taskTransaction: TransactionLog = event.queryRunner.data.taskTransaction;
         if (!taskTransaction) {
             return;

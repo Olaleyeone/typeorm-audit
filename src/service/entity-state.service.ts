@@ -19,6 +19,9 @@ export class EntityStateService {
         entityState.entityId = JSON.stringify(id || event.manager.getId(event.entity));
 
         const taskTransaction: TransactionLog = event.queryRunner.data.taskTransaction;
+        if (!taskTransaction) {
+            throw new Error('Data modification must occur with a defined activity');
+        }
         if (!taskTransaction.id) {
             await this.auditPersistenceService.persistTaskTransaction(taskTransaction, event.manager);
         }
