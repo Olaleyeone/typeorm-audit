@@ -1,30 +1,29 @@
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { Duration } from "../embedded/Duration";
-import { ActivityLog } from "./ActivityLog";
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Duration } from '../embedded/Duration';
+import { ActivityLog } from './ActivityLog';
 
 @Entity()
 export class TransactionLog {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @PrimaryGeneratedColumn()
-    id: number;
+  // @ManyToOne(type => Task, { nullable: false })
+  // @JoinColumn()
+  // task: Task;
 
-    // @ManyToOne(type => Task, { nullable: false })
-    // @JoinColumn()
-    // task: Task;
+  @ManyToOne((type) => ActivityLog, { nullable: false })
+  @JoinColumn()
+  activity: ActivityLog;
 
-    @ManyToOne(type => ActivityLog, { nullable: false })
-    @JoinColumn()
-    activity: ActivityLog;
+  @Column((type) => Duration, { prefix: false })
+  duration: Duration;
 
-    @Column(type => Duration, {prefix: false})
-    duration: Duration;
+  // @Column({ nullable: false })
+  // status: Status = Status.IN_PROGRESS;
 
-    // @Column({ nullable: false })
-    // status: Status = Status.IN_PROGRESS;
-
-    constructor() {
-        this.duration = new Duration();
-    }
+  constructor() {
+    this.duration = new Duration();
+  }
 }
 
 // export enum Status {

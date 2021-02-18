@@ -15,15 +15,15 @@ export const config: ConnectionOptions = {
         "test/entity/**/*.ts"
     ],
     "migrations": [
-        "src/data/migration/**/*.ts"
+        "src/migration/**/*.ts"
     ],
     "subscribers": [
-        "src/data/subscriber/**/*.ts"
+        "src/listener/**/*.ts"
     ],
     "cli": {
         "entitiesDir": "src/data/entity",
-        "migrationsDir": "src/data/migration",
-        "subscribersDir": "src/data/subscriber"
+        "migrationsDir": "src/migration",
+        "subscribersDir": "src/listener"
     },
     namingStrategy: new SnakeNamingStrategy()
 }

@@ -3,8 +3,11 @@ import { EntityManager } from 'typeorm';
 
 export const runnerKey = Symbol('transaction:entityManager');
 
-export function createTransactionRunner(parentContainer: DIContainer, constructor: ConstructorFunction<any>, methodName: string) {
-
+export function createTransactionRunner(
+  parentContainer: DIContainer,
+  constructor: ConstructorFunction<any>,
+  methodName: string,
+) {
   const entityManager: EntityManager = parentContainer.get(EntityManager);
 
   return () => {
@@ -13,7 +16,7 @@ export function createTransactionRunner(parentContainer: DIContainer, constructo
       const realTarget: any = parentContainer.createInstance(constructor);
       return realTarget[methodName].call(realTarget, arguments);
     }
-    return entityManager.transaction(em => {
+    return entityManager.transaction((em) => {
       const container = createTransactionalContainer(parentContainer, em);
       (container as any)[runnerKey] = em;
 
@@ -24,13 +27,16 @@ export function createTransactionRunner(parentContainer: DIContainer, constructo
 }
 
 function createTransactionalContainer(parentContainer: DIContainer, entityManager: EntityManager) {
-  return new LazyDIContainer({
-    providers: [
-      {
-        provide: EntityManager,
-        with: () => entityManager,
-        proxy: false
-      }
-    ]
-  }, parentContainer);
+  return new LazyDIContainer(
+    {
+      providers: [
+        {
+          provide: EntityManager,
+          with: () => entityManager,
+          proxy: false,
+        },
+      ],
+    },
+    parentContainer,
+  );
 }
