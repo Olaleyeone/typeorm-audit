@@ -98,6 +98,12 @@ function createActivity(activityName: string, container: DIContainer) {
 }
 
 async function completeActivity(activity: ActivityLog, entityManager: EntityManager) {
+    if (activity.status === Status.SUCCESSFUL) {
+        if (activity.depth === 1) {
+            entityManager.queryRunner.release();
+        }
+        return;
+    }
     activity.duration.nanoSecondsTaken = Instant.ofEpochMilli(activity.duration.startedAt.getTime()).until(
         OffsetDateTime.now(), ChronoUnit.NANOS);
     console.log(`completed "${activity.name}" in ${activity.duration.nanoSecondsTaken / 1000000}ms`);

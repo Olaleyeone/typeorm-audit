@@ -5,7 +5,7 @@ import { TransactionStartEvent } from "typeorm/subscriber/event/TransactionStart
 import { OperationType } from "../enum/operation-type.enum";
 import { AuditPersistenceService } from "../../service/audit-persistence.service";
 import { EntityStateService, getTransactionLog, setTransactionLog } from '../../service/entity-state.service';
-import { ActivityLog } from "../entity/ActivityLog";
+import { ActivityLog, Status } from "../entity/ActivityLog";
 import { EntityState } from "../entity/EntityState";
 import { EntityStateAttribute } from "../entity/EntityStateAttribute";
 import { TransactionLog } from "../entity/TransactionLog";
@@ -48,9 +48,17 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
         if (!taskTransaction) {
             return;
         }
-        taskTransaction.duration.nanoSecondsTaken = Instant.ofEpochMilli(taskTransaction.duration.startedAt.getTime()).until(
-            OffsetDateTime.now(), ChronoUnit.NANOS);
+        const now = OffsetDateTime.now();
+        taskTransaction.duration.nanoSecondsTaken = Instant.ofEpochMilli(taskTransaction.duration.startedAt.getTime())
+            .until(now, ChronoUnit.NANOS);
         await event.manager.save(taskTransaction);
+        const activity = taskTransaction.activity;
+        if (activity.depth === 1) {
+            activity.status = Status.SUCCESSFUL;
+            activity.duration.nanoSecondsTaken = Instant.ofEpochMilli(activity.duration.startedAt.getTime())
+                .until(now, ChronoUnit.NANOS);
+            await event.manager.save(activity);
+        }
         setTransactionLog(event.manager, null);
         console.log('BEFORE TRANSACTION COMMITTED:', event.queryRunner.data, taskTransaction.activity?.name);
     }
