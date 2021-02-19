@@ -1,8 +1,8 @@
+import { LazyDIContainer } from '@olaleyeone/di-node';
 import "reflect-metadata";
 import { createConnection, EntityManager } from "typeorm";
-import { LazyDIContainer } from '@olaleyeone/di-node';
-import { UserService } from "./service/user.service";
 import { createActivityLogProxy } from "../src/di/transactional-proxy-factory";
+import { UserService } from "./service/user.service";
 
 import('./conf/ormconfig').then(m => {
     createConnection(m.config)
@@ -20,9 +20,17 @@ import('./conf/ormconfig').then(m => {
             });
 
             const userService = container.getInstance(UserService);
-            const user = await userService.saveUser();
-
-            console.log('user:', user);
+            Promise.all([
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser(),
+                userService.saveUser()
+            ]);
 
         }).catch(error => console.log(error));
 });

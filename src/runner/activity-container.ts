@@ -7,8 +7,10 @@ export function getActivityContainer(parentContainer: DIContainer, activityName:
   const parentEntityManager: EntityManager = parentContainer.get(EntityManager);
   let container: DIContainer;
   if (parentEntityManager.queryRunner?.data && (parentEntityManager.queryRunner?.data as any)[activityNameKey]) {
+    // console.log(`*** Reusing existing container for ${activityName} ***`);
     container = parentContainer;
   } else {
+    // console.log(`*** New container for ${activityName} ***`);
     container = createActivityContainer(parentContainer, activityName);
   }
   return container;

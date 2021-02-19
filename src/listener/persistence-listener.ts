@@ -40,6 +40,7 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
       return;
     }
     // console.log('BEFORE TRANSACTION STARTED:', event.queryRunner.data, taskActivity?.name);
+    // console.log('STARTING TRANSACTION:', taskActivity?.name, taskActivity?.duration);
     const taskTransaction = new TransactionLog();
     taskTransaction.activity = taskActivity;
     setTransactionLog(event.manager, taskTransaction);
@@ -70,6 +71,7 @@ export class PersistenceSubscriber implements EntitySubscriberInterface {
     }
     setTransactionLog(event.manager, null);
     // console.log('BEFORE TRANSACTION COMMITTED:', event.queryRunner.data, taskTransaction.activity?.name);
+    // console.log('COMMITTING TRANSACTION:', activity?.name, activity?.duration);
   }
 
   /**

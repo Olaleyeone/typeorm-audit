@@ -19,7 +19,7 @@ export function createActivity(activityName: string, container: DIContainer) {
 
 export function finishActivity(activity: ActivityLog, entityManager: EntityManager) {
   if (activity.status === Status.SUCCESSFUL) {
-    console.log(`completed "${activity.name}" in ${activity.duration.nanoSecondsTaken / 1000000}ms`);
+    // console.log(`"${activity.name}" ${activity.status} in ${activity.duration.nanoSecondsTaken / 1000000}ms`);
     if (activity.depth === 1) {
       entityManager.queryRunner.release();
     }
@@ -29,10 +29,10 @@ export function finishActivity(activity: ActivityLog, entityManager: EntityManag
     OffsetDateTime.now(),
     ChronoUnit.NANOS,
   );
-  console.log(`completed "${activity.name}" in ${activity.duration.nanoSecondsTaken / 1000000}ms`);
   if (activity.status === Status.STARTED) {
     activity.status = Status.SUCCESSFUL;
   }
+  // console.log(`"${activity.name}" ${activity.status} in ${activity.duration.nanoSecondsTaken / 1000000}ms`);
   // console.log('Activity ended', activity);
   if (activity.parent) {
     return;
@@ -42,7 +42,7 @@ export function finishActivity(activity: ActivityLog, entityManager: EntityManag
 }
 
 async function saveActivityLog(taskActivity: ActivityLog, entityManager: EntityManager) {
-  console.log('saving activity log: ', taskActivity.name);
+  // console.log('saving activity log: ', taskActivity.name);
   if (taskActivity.id) {
     const existing = await entityManager.findOne(ActivityLog, taskActivity.id);
     if (existing) {

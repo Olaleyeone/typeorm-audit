@@ -9,7 +9,6 @@ export function createTransactionRunner(
   methodName: string,
 ) {
   const entityManager: EntityManager = parentContainer.get(EntityManager);
-
   return () => {
     let runner = (parentContainer as any)[runnerKey];
     if (runner) {

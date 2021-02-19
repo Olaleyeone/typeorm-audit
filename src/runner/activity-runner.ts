@@ -14,14 +14,13 @@ export function createActivityRunner(
   methodName: string,
 ) {
   const activityName: string = Reflect.getMetadata(Activity.metadataKey, constructor, methodName);
-  let container: DIContainer = getActivityContainer(parentContainer, activityName);
 
   return () => {
+    // console.log(`*** executing ${activityName} ***`);
+    const container: DIContainer = getActivityContainer(parentContainer, activityName);
     const activity = createActivity(activityName, container);
     const entityManager = container.getInstance(EntityManager);
     activity.transaction = getTransactionLog(entityManager);
-
-    // console.log(activityName, entityManager.queryRunner?.data);
 
     let result;
     try {
