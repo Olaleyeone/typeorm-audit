@@ -4,7 +4,7 @@ import { Transactional } from '../decorator/transactional';
 import { createActivityRunner } from '../runner/activity-runner';
 import { createTransactionRunner } from '../runner/transactional-runner';
 
-export function createActivityLogProxy<T>(
+export function ActivityLogProxyFactory<T>(
   constructor: ConstructorFunction<T>,
   provider: Provider<T>,
   container: DIContainer,
@@ -34,15 +34,22 @@ export function createActivityLogProxy<T>(
         if (transactional) {
           return (propertyValue = createTransactionRunner(container, constructor, propertyName));
         }
-
-        const _this: any = target || (target = provider());
-        return (propertyValue = _this[propertyName].bind(_this));
+        if (!target) {
+          target = provider();
+        }
+        propertyValue = (target as any)[propertyName];
+        if (typeof propertyValue === 'function') {
+          propertyValue = propertyValue.bind(target);
+        }
+        return propertyValue;
       },
 
       set: (value) => {
-        const _this: any = target || (target = provider());
+        if (!target) {
+          target = provider();
+        }
         propertyValue = null;
-        _this[propertyName] = value;
+        (target as any)[propertyName] = value;
       },
     });
   });

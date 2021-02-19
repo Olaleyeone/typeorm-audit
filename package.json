@@ -4,7 +4,7 @@
   "description": "Activity log and audit trail for typeorm",
   "main": "index.tx",
   "scripts": {
-    "test": "ts-node test/index.ts",
+    "start": "ts-node test/index.ts",
     "build": "tsc --project tsconfig.production.json",
     "format": "prettier --write \"src/**/*.ts\"",
     "lint": "tslint -p tsconfig.json"

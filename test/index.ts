@@ -1,7 +1,8 @@
 import { LazyDIContainer } from '@olaleyeone/di-node';
 import "reflect-metadata";
 import { createConnection, EntityManager } from "typeorm";
-import { createActivityLogProxy } from "../src/di/transactional-proxy-factory";
+import { ActivityLogProxyFactory } from "../src/di/activity-log-proxy-factory";
+import { User } from './entity/User';
 import { UserService } from "./service/user.service";
 
 import('./conf/ormconfig').then(m => {
@@ -16,7 +17,7 @@ import('./conf/ormconfig').then(m => {
                         proxy: false
                     }
                 ],
-                proxyFactory: createActivityLogProxy
+                proxyFactory: ActivityLogProxyFactory
             });
 
             const userService = container.getInstance(UserService);
@@ -30,7 +31,9 @@ import('./conf/ormconfig').then(m => {
                 userService.saveUser(),
                 userService.saveUser(),
                 userService.saveUser()
-            ]);
+            ]).then((users: User[]) => {
+                console.log(`${users.length} users created!!!`);
+            });
 
         }).catch(error => console.log(error));
 });
